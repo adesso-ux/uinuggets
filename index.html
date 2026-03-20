@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AXA – Prämien bezahlen</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --axa: #0D077F;
+    --axa-mid: #1A12A8;
+    --axa-light: #EEEEF9;
+    --axa-lighter: #F5F5FC;
+    --axa-dark: #09045C;
+    --axa-red: #E11900;      /* AXA accent red */
+    --axa-red-light: #FDECEA;
+
+    --bg: #F4F4F8;
+    --surface: #FFFFFF;
+    --border: #E0E0EE;
+    --text-primary: #1A1A2E;
+    --text-secondary: #5A5A7A;
+    --text-muted: #9898B8;
+    --success: #0D077F;
+    --success-light: #EEEEF9;
+    --warning: #C47B00;
+    --warning-light: #FDF5E0;
+    --danger: #E11900;
+    --danger-light: #FDECEA;
+
+    --radius-sm: 8px;
+    --radius: 14px;
+    --radius-lg: 20px;
+    --shadow: 0 2px 10px rgba(13,7,127,0.08);
+    --shadow-lg: 0 8px 30px rgba(13,7,127,0.14);
+  }
+
+  body {
+    font-family: 'Source Sans Pro', sans-serif;
+    background: #DDDDF0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  /* Phone Frame */
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: var(--bg);
+    border-radius: 54px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 1px rgba(0,0,0,0.15),
+      0 0 0 10px #0f0f1a,
+      0 0 0 11px #2a2a3a,
+      0 40px 100px rgba(13,7,127,0.35);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Status Bar */
+  .status-bar {
+    height: 54px;
+    padding: 14px 28px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+  }
+  .status-time { font-size: 15px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px; }
+  .status-icons { display: flex; gap: 5px; align-items: center; }
+  .status-icons svg { width: 15px; height: 15px; fill: var(--text-primary); }
+  .notch {
+    position: absolute; top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 126px; height: 37px;
+    background: #0f0f1a;
+    border-radius: 0 0 20px 20px;
+  }
+
+  /* Screen */
+  .screen { flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+
+  .view {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.28s ease, transform 0.32s cubic-bezier(0.4,0,0.2,1);
+    transform: translateX(30px);
+  }
+  .view.active { opacity: 1; pointer-events: all; transform: translateX(0); }
+
+  .scroll-area {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .scroll-area::-webkit-scrollbar { display: none; }
+
+  /* Nav Bar */
+  .nav-bar {
+    padding: 12px 20px 8px;
+    display: flex; align-items: center; gap: 12px;
+    flex-shrink: 0;
+    background: var(--bg);
+  }
+  .nav-back {
+    width: 32px; height: 32px;
+    background: var(--surface);
+    border: none; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: var(--shadow); flex-shrink: 0;
+  }
+  .nav-back svg { width: 15px; height: 15px; stroke: var(--axa); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .nav-title { font-size: 17px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.2px; }
+
+  /* ========================
+     AXA LOGO COMPONENT
+  ======================== */
+  .axa-logo {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .axa-wordmark {
+    font-size: 22px; font-weight: 900;
+    color: var(--axa);
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+  .axa-tagline {
+    font-size: 10px; color: var(--text-muted); font-weight: 400;
+    letter-spacing: 0.3px;
+  }
+
+  /* ========================
+     VIEW 1: OVERVIEW
+  ======================== */
+  .overview-header {
+    padding: 16px 20px 14px;
+    flex-shrink: 0;
+  }
+  .header-top {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 18px;
+  }
+  .greeting { font-size: 13px; color: var(--text-secondary); font-weight: 400; margin-bottom: 2px; }
+  .overview-title { font-size: 26px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; line-height: 1.15; }
+
+  /* AXA Summary Hero */
+  .axa-hero {
+    background: var(--axa);
+    border-radius: var(--radius-lg);
+    padding: 22px;
+    margin-bottom: 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  /* Geometric AXA pattern */
+  .axa-hero::before {
+    content: 'AXA';
+    position: absolute;
+    right: -12px; bottom: -18px;
+    font-size: 100px; font-weight: 900;
+    color: rgba(255,255,255,0.04);
+    letter-spacing: -6px;
+    line-height: 1;
+    pointer-events: none;
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+  .axa-hero::after {
+    content: '';
+    position: absolute;
+    top: -30px; left: -30px;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+  .hero-label { font-size: 11px; color: rgba(255,255,255,0.55); font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 6px; }
+  .hero-amount { font-size: 38px; font-weight: 700; color: #fff; letter-spacing: -1.5px; margin-bottom: 3px; line-height: 1; }
+  .hero-sub { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 16px; font-weight: 400; }
+  .hero-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .hero-pill {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px; padding: 4px 11px;
+    font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.85);
+  }
+  .hero-pill.red { background: rgba(225,25,0,0.25); border-color: rgba(225,25,0,0.3); color: #FF8070; }
+
+  /* Section */
+  .section-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .section-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+  .section-link { font-size: 13px; color: var(--axa); font-weight: 600; }
+
+  /* Policy Cards */
+  .policy-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    border: 1.5px solid transparent;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .policy-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: transparent;
+    border-radius: 3px 0 0 3px;
+  }
+  .policy-card.overdue::before { background: var(--axa-red); }
+  .policy-card.soon::before { background: var(--warning); }
+  .policy-card.upcoming::before { background: var(--axa); }
+  .policy-card:active { transform: scale(0.985); box-shadow: var(--shadow-lg); }
+
+  .policy-icon {
+    width: 42px; height: 42px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .bg-axa { background: var(--axa-light); }
+  .bg-blue { background: #EBF0FB; }
+  .bg-orange { background: #FDF3E5; }
+  .bg-red { background: #FDF0EF; }
+  .bg-teal { background: #E5F5F5; }
+
+  .policy-info { flex: 1; min-width: 0; }
+  .policy-name { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 1px; letter-spacing: -0.1px; }
+  .policy-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; }
+  .policy-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 700; padding: 2px 7px;
+    border-radius: 4px; letter-spacing: 0.2px; text-transform: uppercase;
+  }
+  .badge-overdue { background: var(--danger-light); color: var(--danger); }
+  .badge-soon { background: var(--warning-light); color: var(--warning); }
+  .badge-upcoming { background: var(--axa-light); color: var(--axa); }
+
+  .policy-right { text-align: right; flex-shrink: 0; }
+  .policy-amount { font-size: 16px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; }
+  .policy-freq { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+  .policy-chev { color: var(--text-muted); font-size: 16px; margin-left: 6px; }
+
+  /* Tab Bar */
+  .tab-bar {
+    height: 83px;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: flex-start;
+    padding: 10px 0 0; flex-shrink: 0;
+  }
+  .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
+  .tab-icon { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; }
+  .tab-icon svg { width: 22px; height: 22px; stroke: var(--text-muted); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .tab-label { font-size: 10px; font-weight: 600; color: var(--text-muted); }
+  .tab.active .tab-label { color: var(--axa); }
+  .tab.active svg { stroke: var(--axa) !important; }
+
+  /* ========================
+     VIEW 2: DETAIL
+  ======================== */
+  .detail-policy-header {
+    margin: 4px 20px 16px;
+    background: var(--axa);
+    border-radius: var(--radius-lg);
+    padding: 22px;
+    position: relative; overflow: hidden;
+  }
+  .detail-policy-header::after {
+    content: '';
+    position: absolute; right: -20px; top: -20px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+  .detail-icon-row { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+  .detail-big-icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.12); flex-shrink: 0;
+  }
+  .detail-header-name { font-size: 20px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
+  .detail-header-sub { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 2px; }
+  .detail-amount-row {
+    background: rgba(255,255,255,0.1);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .da-label { font-size: 10px; color: rgba(255,255,255,0.55); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .da-value { font-size: 28px; font-weight: 700; color: #fff; letter-spacing: -1px; line-height: 1; }
+  .da-due-label { font-size: 10px; color: rgba(255,255,255,0.55); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; text-align: right; }
+  .da-due-date { font-size: 14px; font-weight: 700; color: #fff; text-align: right; }
+
+  .detail-scroll { padding: 0 20px 120px; }
+
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+  .info-chip {
+    background: var(--surface); border-radius: var(--radius-sm);
+    padding: 13px; box-shadow: var(--shadow);
+  }
+  .ic-label { font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .ic-value { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+
+  .coverage-list { margin-bottom: 20px; }
+  .coverage-item {
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    padding: 11px 14px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 6px; box-shadow: var(--shadow);
+  }
+  .cov-dot {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--axa-light);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .cov-dot svg { width: 10px; height: 10px; stroke: var(--axa); fill: none; stroke-width: 2.5; }
+  .cov-text { font-size: 13px; font-weight: 400; color: var(--text-primary); }
+
+  /* CTA Button */
+  .cta-wrap { padding: 0 20px 20px; flex-shrink: 0; }
+  .cta-btn {
+    width: 100%; background: var(--axa);
+    color: #fff; border: none; border-radius: var(--radius);
+    padding: 16px; font-size: 16px; font-weight: 700;
+    font-family: 'Source Sans Pro', sans-serif; cursor: pointer;
+    letter-spacing: -0.2px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: background 0.15s;
+  }
+  .cta-btn:active { background: var(--axa-dark); }
+  .cta-btn svg { width: 17px; height: 17px; stroke: rgba(255,255,255,0.7); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ========================
+     VIEW 3: PAYMENT
+  ======================== */
+  .payment-hero {
+    margin: 4px 20px 16px;
+    background: var(--axa);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    display: flex; justify-content: space-between; align-items: center;
+    position: relative; overflow: hidden;
+  }
+  .payment-hero::before {
+    content: '';
+    position: absolute; right: -15px; bottom: -15px;
+    width: 80px; height: 80px; border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+  .ph-label { font-size: 10px; color: rgba(255,255,255,0.55); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .ph-name { font-size: 15px; font-weight: 700; color: #fff; }
+  .ph-amount { font-size: 28px; font-weight: 700; color: #fff; letter-spacing: -1px; text-align: right; }
+
+  .methods-wrap { padding: 0 20px; }
+  .method-group-label {
+    font-size: 10px; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.8px;
+    margin: 14px 0 8px;
+  }
+  .method-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 7px; cursor: pointer;
+    box-shadow: var(--shadow);
+    border: 2px solid transparent;
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .method-card:active { transform: scale(0.985); }
+  .method-card.selected { border-color: var(--axa); }
+
+  .method-logo {
+    width: 44px; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 900; flex-shrink: 0; overflow: hidden;
+  }
+  .ml-twint { background: var(--axa-light); color: var(--axa); letter-spacing: -0.5px; font-size: 10px; }
+  .ml-post { background: #FFF8DD; color: #D4820E; font-size: 18px; }
+  .ml-bank { background: #F0EBF8; font-size: 20px; }
+  .ml-paypal { background: #EBF3FB; font-size: 20px; }
+  .ml-card { background: #FDF3E5; font-size: 20px; }
+
+  .method-info { flex: 1; }
+  .method-name { font-size: 14px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.1px; }
+  .method-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+  .method-badge-rec {
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.4px; padding: 3px 7px; border-radius: 4px;
+    background: var(--axa-light); color: var(--axa);
+  }
+  .method-radio {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: border-color 0.15s;
+  }
+  .method-card.selected .method-radio { border-color: var(--axa); }
+  .method-radio-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--axa); opacity: 0; transition: opacity 0.15s; }
+  .method-card.selected .method-radio-dot { opacity: 1; }
+
+  .secure-row {
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    font-size: 11px; color: var(--text-muted); padding: 10px 20px 6px;
+    flex-shrink: 0;
+  }
+  .secure-row svg { width: 12px; height: 12px; stroke: var(--text-muted); fill: none; stroke-width: 2; }
+
+  /* ========================
+     VIEW 4: CONFIRM
+  ======================== */
+  #view-confirm {
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 36px 28px; text-align: center;
+  }
+  .axa-confirm-logo {
+    font-size: 18px; font-weight: 900; color: var(--axa);
+    letter-spacing: -0.8px; margin-bottom: 24px;
+  }
+  .confirm-circle {
+    width: 86px; height: 86px; background: var(--axa);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 24px;
+    animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .confirm-circle svg { width: 38px; height: 38px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .conf-title { font-size: 26px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; margin-bottom: 8px; }
+  .conf-sub { font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 26px; }
+
+  .receipt {
+    width: 100%; background: var(--surface);
+    border-radius: var(--radius-lg); padding: 18px;
+    box-shadow: var(--shadow); margin-bottom: 24px; text-align: left;
+  }
+  .receipt-row {
+    display: flex; justify-content: space-between;
+    padding: 9px 0; border-bottom: 1px solid var(--border);
+  }
+  .receipt-row:last-child { border-bottom: none; }
+  .rk { font-size: 12px; color: var(--text-secondary); font-weight: 400; }
+  .rv { font-size: 12px; font-weight: 700; color: var(--text-primary); }
+  .rv.axa-color { color: var(--axa); }
+
+  .done-btn {
+    width: 100%; background: var(--axa); color: #fff;
+    border: none; border-radius: var(--radius); padding: 16px;
+    font-size: 16px; font-weight: 700;
+    font-family: 'Source Sans Pro', sans-serif; cursor: pointer;
+    letter-spacing: -0.2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="status-bar">
+    <div class="notch"></div>
+    <span class="status-time">9:41</span>
+    <div class="status-icons">
+      <svg viewBox="0 0 24 24"><path d="M1 6l5 5 5-5M1 12l5 5 5-5"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0114.08 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg>
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="11" rx="2"/><path d="M22 11v4"/><rect x="4" y="10" width="12" height="5" rx="1" fill="currentColor"/></svg>
+    </div>
+  </div>
+
+  <div class="screen">
+
+    <!-- ====== VIEW 1: OVERVIEW ====== -->
+    <div class="view active" id="view-overview">
+      <div class="overview-header">
+        <div class="header-top">
+          <div>
+            <div class="greeting">Guten Morgen, Petra</div>
+            <div class="overview-title">Offene Prämien</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:22px;font-weight:900;color:var(--axa);letter-spacing:-1px;">AXA</div>
+            <div style="font-size:9px;color:var(--text-muted);font-weight:600;letter-spacing:0.3px;">MY AXA</div>
+          </div>
+        </div>
+
+        <!-- Hero Card -->
+        <div class="axa-hero">
+          <div class="hero-label">Ausstehend · 2025</div>
+          <div class="hero-amount">CHF 4'218.—</div>
+          <div class="hero-sub">4 Versicherungen · Nächste Fälligkeit in 3 Tagen</div>
+          <div class="hero-pills">
+            <div class="hero-pill red">● 1 überfällig</div>
+            <div class="hero-pill">● 1 bald fällig</div>
+            <div class="hero-pill">● 2 geplant</div>
+          </div>
+        </div>
+
+        <!-- Dringend -->
+        <div class="section-header">
+          <span class="section-title">Dringend</span>
+          <span class="section-link">Alle anzeigen</span>
+        </div>
+      </div>
+
+      <div class="scroll-area" style="padding:0 20px 120px;">
+        <!-- Overdue -->
+        <div class="policy-card overdue" onclick="openDetail('auto')">
+          <div class="policy-icon bg-orange"><svg viewBox="0 0 24 24" fill="none" stroke="#C47B00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M5 17H3v-5l2.5-5h11L19 12v5h-2"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/><path d="M5 12h14"/></svg></div>
+          <div class="policy-info">
+            <div class="policy-name">Autoversicherung</div>
+            <div class="policy-meta">Vollkasko · VW Golf · ZH 123 456</div>
+            <div class="policy-badge badge-overdue">▲ Überfällig – 3 Tage</div>
+          </div>
+          <div class="policy-right">
+            <div class="policy-amount">1'240.—</div>
+            <div class="policy-freq">CHF / Jahr</div>
+          </div>
+          <span class="policy-chev">›</span>
+        </div>
+
+        <!-- Soon -->
+        <div class="policy-card soon" onclick="openDetail('hausrat')">
+          <div class="policy-icon bg-blue"><svg viewBox="0 0 24 24" fill="none" stroke="#3B6FD4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/><path d="M5 21h14"/></svg></div>
+          <div class="policy-info">
+            <div class="policy-name">Hausratversicherung</div>
+            <div class="policy-meta">Standard Plus · Zürich 8001</div>
+            <div class="policy-badge badge-soon">● Fällig in 8 Tagen</div>
+          </div>
+          <div class="policy-right">
+            <div class="policy-amount">318.—</div>
+            <div class="policy-freq">CHF / Jahr</div>
+          </div>
+          <span class="policy-chev">›</span>
+        </div>
+
+        <div class="section-header" style="margin-top:16px;">
+          <span class="section-title">Geplant</span>
+        </div>
+
+        <!-- Upcoming 1 -->
+        <div class="policy-card upcoming" onclick="openDetail('kranken')">
+          <div class="policy-icon bg-red"><svg viewBox="0 0 24 24" fill="none" stroke="#C0392B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M12 6v12M6 12h12"/><rect x="3" y="3" width="18" height="18" rx="3"/></svg></div>
+          <div class="policy-info">
+            <div class="policy-name">Krankenkasse Zusatz</div>
+            <div class="policy-meta">COMP · Helsana · via AXA</div>
+            <div class="policy-badge badge-upcoming">● Fällig in 45 Tagen</div>
+          </div>
+          <div class="policy-right">
+            <div class="policy-amount">1'980.—</div>
+            <div class="policy-freq">CHF / Jahr</div>
+          </div>
+          <span class="policy-chev">›</span>
+        </div>
+
+        <!-- Upcoming 2 -->
+        <div class="policy-card upcoming" onclick="openDetail('leben')">
+          <div class="policy-icon bg-axa"><svg viewBox="0 0 24 24" fill="none" stroke="#0D077F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+          <div class="policy-info">
+            <div class="policy-name">Lebensversicherung</div>
+            <div class="policy-meta">Risikolebens-VS · AXA Winterthur</div>
+            <div class="policy-badge badge-upcoming">● Fällig in 62 Tagen</div>
+          </div>
+          <div class="policy-right">
+            <div class="policy-amount">680.—</div>
+            <div class="policy-freq">CHF / Jahr</div>
+          </div>
+          <span class="policy-chev">›</span>
+        </div>
+      </div>
+
+      <!-- Tab Bar -->
+      <div class="tab-bar">
+        <div class="tab active">
+          <div class="tab-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="16" rx="2"/><path d="M2 10h20"/></svg></div>
+          <div class="tab-label">Prämien</div>
+        </div>
+        <div class="tab">
+          <div class="tab-icon"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+          <div class="tab-label">Policen</div>
+        </div>
+        <div class="tab">
+          <div class="tab-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div>
+          <div class="tab-label">Schäden</div>
+        </div>
+        <div class="tab">
+          <div class="tab-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/></svg></div>
+          <div class="tab-label">Profil</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== VIEW 2: DETAIL ====== -->
+    <div class="view" id="view-detail">
+      <div class="nav-bar">
+        <button class="nav-back" onclick="goBack('view-overview')">
+          <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <span class="nav-title">Prämiendetails</span>
+        <span style="margin-left:auto;font-size:18px;font-weight:900;color:var(--axa);letter-spacing:-0.8px;">AXA</span>
+      </div>
+
+      <!-- Blue hero header -->
+      <div class="detail-policy-header">
+        <div class="detail-icon-row">
+          <div class="detail-big-icon" id="d-icon"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M5 17H3v-5l2.5-5h11L19 12v5h-2"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/><path d="M5 12h14"/></svg></div>
+          <div>
+            <div class="detail-header-name" id="d-name">Autoversicherung</div>
+            <div class="detail-header-sub" id="d-sub">Vollkasko · VW Golf · ZH 123 456</div>
+          </div>
+        </div>
+        <div class="detail-amount-row">
+          <div>
+            <div class="da-label">Jahresprämie</div>
+            <div class="da-value" id="d-amount">CHF 1'240.—</div>
+          </div>
+          <div>
+            <div class="da-due-label">Fälligkeit</div>
+            <div class="da-due-date" id="d-due">17. März 2025</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scroll-area detail-scroll">
+        <div class="info-grid">
+          <div class="info-chip">
+            <div class="ic-label">Policen-Nr.</div>
+            <div class="ic-value" id="d-polno">CH-AV-2019-441</div>
+          </div>
+          <div class="info-chip">
+            <div class="ic-label">Zahlungsart</div>
+            <div class="ic-value">Jährlich</div>
+          </div>
+          <div class="info-chip">
+            <div class="ic-label">Versicherer</div>
+            <div class="ic-value" id="d-insurer">AXA Winterthur</div>
+          </div>
+          <div class="info-chip">
+            <div class="ic-label">Periode</div>
+            <div class="ic-value">2025 / 2026</div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-bottom:10px;">Deckungsumfang</div>
+        <div class="coverage-list" id="d-coverages"></div>
+      </div>
+
+      <div class="cta-wrap">
+        <button class="cta-btn" onclick="goPayment()">
+          <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="16" rx="2"/><path d="M2 10h20"/></svg>
+          Prämie jetzt bezahlen
+        </button>
+      </div>
+    </div>
+
+    <!-- ====== VIEW 3: PAYMENT ====== -->
+    <div class="view" id="view-payment">
+      <div class="nav-bar">
+        <button class="nav-back" onclick="goBack('view-detail')">
+          <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <span class="nav-title">Zahlungsmethode</span>
+        <span style="margin-left:auto;font-size:18px;font-weight:900;color:var(--axa);letter-spacing:-0.8px;">AXA</span>
+      </div>
+
+      <!-- Amount Banner -->
+      <div class="payment-hero">
+        <div>
+          <div class="ph-label">Zu bezahlen</div>
+          <div class="ph-name" id="p-name">Autoversicherung</div>
+        </div>
+        <div class="ph-amount" id="p-amount">CHF 1'240.—</div>
+      </div>
+
+      <div class="scroll-area" style="padding-bottom:130px;">
+        <div class="methods-wrap">
+          <div class="method-group-label">Beliebt in der Schweiz</div>
+
+          <div class="method-card selected" onclick="selectMethod(this)" data-method="TWINT">
+            <div class="method-logo ml-twint">TWINT</div>
+            <div class="method-info">
+              <div class="method-name">TWINT</div>
+              <div class="method-sub">Schweizer Mobile Payment</div>
+            </div>
+            <div class="method-badge-rec">Empfohlen</div>
+            <div class="method-radio"><div class="method-radio-dot"></div></div>
+          </div>
+
+          <div class="method-card" onclick="selectMethod(this)" data-method="PostFinance">
+            <div class="method-logo ml-post"><svg viewBox="0 0 24 24" fill="none" stroke="#C47B00" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18"/><path d="M7 15h2M12 15h5"/></svg></div>
+            <div class="method-info">
+              <div class="method-name">PostFinance</div>
+              <div class="method-sub">Online-Banking · Die Schweizer Post</div>
+            </div>
+            <div class="method-radio"><div class="method-radio-dot"></div></div>
+          </div>
+
+          <div class="method-group-label">E-Banking</div>
+
+          <div class="method-card" onclick="selectMethod(this)" data-method="E-Banking">
+            <div class="method-logo ml-bank"><svg viewBox="0 0 24 24" fill="none" stroke="#7B5EA7" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M3 21h18M3 10h18M5 10V21M8 10V21M11 10V21M14 10V21M17 10V21M19 10V21M12 3L3 10h18L12 3z"/></svg></div>
+            <div class="method-info">
+              <div class="method-name">E-Banking</div>
+              <div class="method-sub">UBS, Raiffeisen, ZKB, Migros Bank …</div>
+            </div>
+            <div class="method-radio"><div class="method-radio-dot"></div></div>
+          </div>
+
+          <div class="method-card" onclick="selectMethod(this)" data-method="PayPal">
+            <div class="method-logo ml-paypal"><svg viewBox="0 0 24 24" fill="none" stroke="#1565C0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="12" cy="12" r="9"/><path d="M12 3a14.5 14.5 0 010 18M3 12h18"/><path d="M3.6 8h16.8M3.6 16h16.8"/></svg></div>
+            <div class="method-info">
+              <div class="method-name">PayPal</div>
+              <div class="method-sub">Internationaler Online-Dienst</div>
+            </div>
+            <div class="method-radio"><div class="method-radio-dot"></div></div>
+          </div>
+
+          <div class="method-group-label">Karte</div>
+
+          <div class="method-card" onclick="selectMethod(this)" data-method="Kreditkarte">
+            <div class="method-logo ml-card"><svg viewBox="0 0 24 24" fill="none" stroke="#C47B00" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h3M14 15h4"/></svg></div>
+            <div class="method-info">
+              <div class="method-name">Kredit- / Debitkarte</div>
+              <div class="method-sub">Visa, Mastercard, Maestro</div>
+            </div>
+            <div class="method-radio"><div class="method-radio-dot"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="secure-row">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        256-Bit SSL · PCI DSS zertifiziert · AXA Datenschutz
+      </div>
+      <div class="cta-wrap">
+        <button class="cta-btn" onclick="goConfirm()">Zahlung bestätigen →</button>
+      </div>
+    </div>
+
+    <!-- ====== VIEW 4: CONFIRM ====== -->
+    <div class="view" id="view-confirm">
+      <div style="font-size:22px;font-weight:900;color:var(--axa);letter-spacing:-1px;text-align:center;margin-bottom:28px;">AXA</div>
+      <div class="confirm-circle">
+        <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+      <div class="conf-title">Zahlung erfolgreich!</div>
+      <div class="conf-sub">Ihre Prämie wurde bezahlt.<br>Die Bestätigung erhalten Sie per E-Mail.</div>
+
+      <div class="receipt">
+        <div class="receipt-row">
+          <span class="rk">Versicherung</span>
+          <span class="rv" id="c-name">Autoversicherung</span>
+        </div>
+        <div class="receipt-row">
+          <span class="rk">Betrag</span>
+          <span class="rv" id="c-amount">CHF 1'240.—</span>
+        </div>
+        <div class="receipt-row">
+          <span class="rk">Zahlungsmethode</span>
+          <span class="rv" id="c-method">TWINT</span>
+        </div>
+        <div class="receipt-row">
+          <span class="rk">Datum</span>
+          <span class="rv" id="c-date">20. März 2025</span>
+        </div>
+        <div class="receipt-row">
+          <span class="rk">Referenz-Nr.</span>
+          <span class="rv" id="c-ref">#AXA-2025-04419</span>
+        </div>
+        <div class="receipt-row">
+          <span class="rk">Status</span>
+          <span class="rv axa-color">✓ Bezahlt</span>
+        </div>
+      </div>
+
+      <button class="done-btn" onclick="goHome()">Zurück zur Übersicht</button>
+    </div>
+
+  </div><!-- /screen -->
+</div><!-- /phone -->
+
+<script>
+  const iconSVGs = {
+    auto: `<svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M5 17H3v-5l2.5-5h11L19 12v5h-2"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/><path d="M5 12h14"/></svg>`,
+    hausrat: `<svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/><path d="M5 21h14"/></svg>`,
+    kranken: `<svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M12 6v12M6 12h12"/><rect x="3" y="3" width="18" height="18" rx="3"/></svg>`,
+    leben: `<svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>`
+  };
+
+  const policies = {
+    auto: {
+      name: 'Autoversicherung',
+      sub: 'Vollkasko · VW Golf · ZH 123 456',
+      amount: "CHF 1'240.—", due: '17. März 2025',
+      polno: 'CH-AV-2019-441', insurer: 'AXA Winterthur',
+      coverages: ['Haftpflicht (unbegrenzt)', 'Vollkaskoschaden', 'Glasbruchschaden', 'Parkschaden', 'Diebstahlschutz', 'Pannenhilfe Schweiz & Europa']
+    },
+    hausrat: {
+      name: 'Hausratversicherung',
+      sub: 'Standard Plus · Zürich 8001',
+      amount: 'CHF 318.—', due: '28. März 2025',
+      polno: 'CH-HR-2022-887', insurer: 'AXA Winterthur',
+      coverages: ['Einbruchdiebstahl', 'Wasser- und Feuerschäden', 'Glasbruch', 'Naturgefahren', 'Einfacher Diebstahl']
+    },
+    kranken: {
+      name: 'Krankenkasse Zusatz',
+      sub: 'COMP · Helsana · via AXA',
+      amount: "CHF 1'980.—", due: '1. Mai 2025',
+      polno: 'CH-KK-2021-334', insurer: 'Helsana / AXA',
+      coverages: ['Stationäre Behandlung', 'Komplementärmedizin', 'Auslandkrankenschutz', 'Brillen & Kontaktlinsen', 'Fitness-Beiträge bis CHF 500']
+    },
+    leben: {
+      name: 'Lebensversicherung',
+      sub: 'Risikolebens-VS · AXA Winterthur',
+      amount: 'CHF 680.—', due: '20. Mai 2025',
+      polno: 'CH-LV-2018-109', insurer: 'AXA Winterthur',
+      coverages: ["Todesfallschutz CHF 500'000", 'Invaliditätsschutz', 'Prämienbefreiung bei Erwerbsunf.', 'Weltweite Deckung']
+    }
+  };
+
+  let currentKey = 'auto', currentMethod = 'TWINT';
+
+  function openDetail(key) {
+    currentKey = key;
+    const p = policies[key];
+    document.getElementById('d-icon').innerHTML = iconSVGs[key];
+    document.getElementById('d-name').textContent = p.name;
+    document.getElementById('d-sub').textContent = p.sub;
+    document.getElementById('d-amount').textContent = p.amount;
+    document.getElementById('d-due').textContent = p.due;
+    document.getElementById('d-polno').textContent = p.polno;
+    document.getElementById('d-insurer').textContent = p.insurer;
+    document.getElementById('d-coverages').innerHTML = p.coverages.map(c =>
+      `<div class="coverage-item"><div class="cov-dot"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div><span class="cov-text">${c}</span></div>`
+    ).join('');
+    nav('view-detail');
+  }
+
+  function goPayment() {
+    const p = policies[currentKey];
+    document.getElementById('p-name').textContent = p.name;
+    document.getElementById('p-amount').textContent = p.amount;
+    nav('view-payment');
+  }
+
+  function goConfirm() {
+    const p = policies[currentKey];
+    document.getElementById('c-name').textContent = p.name;
+    document.getElementById('c-amount').textContent = p.amount;
+    document.getElementById('c-method').textContent = currentMethod;
+    document.getElementById('c-date').textContent = '20. März 2025';
+    nav('view-confirm');
+    const c = document.querySelector('.confirm-circle');
+    c.style.animation = 'none'; c.offsetHeight;
+    c.style.animation = 'popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both';
+  }
+
+  function goHome() { nav('view-overview'); }
+  function goBack(id) { nav(id); }
+
+  function nav(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function selectMethod(el) {
+    document.querySelectorAll('.method-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    currentMethod = el.dataset.method;
+  }
+</script>
+</body>
+</html>
